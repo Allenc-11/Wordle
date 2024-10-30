@@ -4,7 +4,14 @@ document.addEventListener("DOMContentLoaded", () => {
   let guessedWords = [[]];
   let availableSpece = 1;
 
-  let word = "dairy";
+  let word;
+  fetch("https://random-word-api.herokuapp.com/word?number=1&length=5")
+    .then((response) => response.json())
+    .then((data) => {
+      word = data[0]; // Store the word in a variable
+    })
+    .catch((error) => console.error("Error fetching the word:", error));
+
   let guessedWordCount = 0;
 
   const keys = document.querySelectorAll(".keyboard-row button");
@@ -78,17 +85,16 @@ document.addEventListener("DOMContentLoaded", () => {
       }, interval * index);
     });
 
-    guessedWordCount += 1;
+    const totalAnimationTime = interval * currentWordArr.length;
 
-    if (currenWord === word) {
-      window.alert("Congratuation");
-    }
-
-    if (guessedWords.length === 6) {
-      window.alert(`Sorry, you lost, the word is ${word}.`);
-    }
-
-    guessedWords.push([]);
+    setTimeout(() => {
+      if (currenWord === word) {
+        window.alert("Congratulations");
+      } else if (guessedWords.length === 6) {
+        window.alert(`Sorry, you lost, the word is ${word}.`);
+      }
+      guessedWords.push([]);
+    }, totalAnimationTime);
   }
 
   function handleDeleteLetter() {
