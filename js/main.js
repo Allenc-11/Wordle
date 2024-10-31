@@ -2,19 +2,34 @@ document.addEventListener("DOMContentLoaded", () => {
   createSquares();
 
   let guessedWords = [[]];
-  let availableSpece = 1;
+  let availableSpace = 1;
 
   let word;
   fetch("https://random-word-api.herokuapp.com/word?number=1&length=5")
-    .then((response) => response.json())
+    .then((response) => {
+      if (response.ok) return response.json();
+      else window.alert("Failed to fetch Data");
+    })
     .then((data) => {
       word = data[0]; // Store the word in a variable
-    })
-    .catch((error) => console.error("Error fetching the word:", error));
+      console.log(word);
+    });
 
   let guessedWordCount = 0;
 
   const keys = document.querySelectorAll(".keyboard-row button");
+
+  function createSquares() {
+    const gameBoard = document.getElementById("board");
+
+    for (let index = 0; index < 30; index++) {
+      let square = document.createElement("div");
+      square.classList.add("square");
+      square.classList.add("animate__animated");
+      square.setAttribute("id", index + 1);
+      gameBoard.appendChild(square);
+    }
+  }
 
   function getCurrentWordArr() {
     const numberOfGuessedWords = guessedWords.length;
@@ -27,22 +42,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (currentWordArr && currentWordArr.length < 5) {
       currentWordArr.push(letter);
 
-      const availableSpeceEl = document.getElementById(String(availableSpece));
-      availableSpece = availableSpece + 1;
+      const availableSpaceEl = document.getElementById(String(availableSpace));
+      availableSpace = availableSpace + 1;
 
-      availableSpeceEl.textContent = letter;
-    }
-  }
-
-  function createSquares() {
-    const gameBoard = document.getElementById("board");
-
-    for (let index = 0; index < 30; index++) {
-      let square = document.createElement("div");
-      square.classList.add("square");
-      square.classList.add("animate__animated");
-      square.setAttribute("id", index + 1);
-      gameBoard.appendChild(square);
+      availableSpaceEl.textContent = letter;
     }
   }
 
@@ -69,9 +72,7 @@ document.addEventListener("DOMContentLoaded", () => {
       window.alert("Word must be 5 letters");
       return;
     }
-
-    const currenWord = currentWordArr.join("");
-
+    const currentWord = currentWordArr.join("");
     const firstLetterId = guessedWordCount * 5 + 1;
     const interval = 200;
     currentWordArr.forEach((letter, index) => {
@@ -85,35 +86,51 @@ document.addEventListener("DOMContentLoaded", () => {
       }, interval * index);
     });
 
+    guessedWordCount += 1;
+
     const totalAnimationTime = interval * currentWordArr.length;
 
     setTimeout(() => {
-      if (currenWord === word) {
+      if (currentWord === word) {
         window.alert("Congratulations");
-      } else if (guessedWords.length === 6) {
+      } else if (guessedWords.length > 6) {
         window.alert(`Sorry, you lost, the word is ${word}.`);
       }
-      guessedWords.push([]);
     }, totalAnimationTime);
+
+    guessedWords.push([]);
   }
 
   function handleDeleteLetter() {
     const currentWordArr = getCurrentWordArr();
     const removedLetter = currentWordArr.pop();
+    if (removedLetter !== undefined) {
+      guessedWords[guessedWords.length - 1] = currentWordArr;
 
-    guessedWords[guessedWords.length - 1] = currentWordArr;
+      const lastLetterEl = document.getElementById(String(availableSpace - 1));
 
-    const lastLetterEl = document.getElementById(String(availableSpece - 1));
+      lastLetterEl.textContent = "";
 
-    lastLetterEl.textContent = "";
-
-    availableSpece = availableSpece - 1;
+      availableSpace = availableSpace - 1;
+    } else {
+      window.alert("Please Enter a Letter");
+    }
   }
+
+  document.addEventListener("keydown", (event) => {
+    const key = event.key.toLowerCase();
+    if (key === "enter") {
+      handleSubmitWord();
+    } else if (key === "backspace") {
+      handleDeleteLetter();
+    } else if (key.length === 1 && key >= "a" && key <= "z") {
+      updateGuessedWords(key);
+    }
+  });
 
   for (let i = 0; i < keys.length; i++) {
     keys[i].onclick = ({ target }) => {
       const letter = target.getAttribute("data-key");
-
       if (letter == "enter") {
         handleSubmitWord();
         return;
@@ -123,7 +140,6 @@ document.addEventListener("DOMContentLoaded", () => {
         handleDeleteLetter();
         return;
       }
-
       updateGuessedWords(letter);
     };
   }
