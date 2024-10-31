@@ -66,13 +66,18 @@ document.addEventListener("DOMContentLoaded", () => {
     return "rgb(181,159,59)";
   }
 
-  function handleSubmitWord() {
+  async function handleSubmitWord() {
     const currentWordArr = getCurrentWordArr();
     if (currentWordArr.length !== 5) {
       window.alert("Word must be 5 letters");
       return;
     }
     const currentWord = currentWordArr.join("");
+    const response = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${currentWord}`);
+    if (!response.ok) {
+      window.alert(`'${currentWord}' is NOT a word.'`);
+      return;
+    }
     const firstLetterId = guessedWordCount * 5 + 1;
     const interval = 200;
     currentWordArr.forEach((letter, index) => {
@@ -94,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (currentWord === word) {
         window.alert("Congratulations");
       } else if (guessedWords.length > 6) {
-        window.alert(`Sorry, you lost, the word is ${word}.`);
+        window.alert(`Sorry, you lost, the word is '${word}'.`);
       }
     }, totalAnimationTime);
 
